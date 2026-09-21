@@ -10,8 +10,11 @@ import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.util.Random;
+
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JOptionPane;
+import javax.swing.Timer;
 
 /**
  *
@@ -38,6 +41,9 @@ public class Jogo extends javax.swing.JFrame {
     int quantidadeCasasAbertas=0;
     
     boolean jogoEncerrado= false;
+    
+    int segundosPassados = 0;
+    Timer cronometro;
     
     
     
@@ -114,9 +120,10 @@ public class Jogo extends javax.swing.JFrame {
     
     
     public void IniciarJogo(){
+        LimparJogo();
         //chamar o metodo adicionarBombas
         AdicionarBombas();
-        
+        IniciarCronometro();
         //depois precisamos inicar os botoes do jogo
         for(int colunas=0;colunas<=9;colunas++){
             for(int linhas=0;linhas<=9;linhas++){
@@ -146,12 +153,13 @@ public class Jogo extends javax.swing.JFrame {
         JButton botao = btnCampos[linha][coluna];
         //se no botão tiver uma bomba, então vamos mostrar a bomba a 
         if(bombas[linha][coluna]){
-            ImageIcon imgBomba = new ImageIcon(getClass().getResource("/Interface/blast.png"));
+            ImageIcon imgBomba = new ImageIcon(getClass().getResource("/assets/blast.png"));
             //colocar a imagem no botao
             botao.setIcon(imgBomba);
+            FinalizarJogo(false);
             return;
         }else{
-            ImageIcon imgBandeira = new ImageIcon(getClass().getResource("/Interface/finish.png"));
+            ImageIcon imgBandeira = new ImageIcon(getClass().getResource("/assets/finish.png"));
             botao.setIcon(imgBandeira);
         }
 
@@ -159,21 +167,109 @@ public class Jogo extends javax.swing.JFrame {
     }// fim do metodo abrirBotao
 
     
-    @SuppressWarnings("unchecked")
+    // este metodo informa quando a pessoa perder ou ganhar o jogo
+    public void FinalizarJogo(boolean venceu){
+        mostrarBombas();
+        //vamos informar que o jogo acabou
+        jogoEncerrado=true;
+        cronometro.stop();
+        
+        //verificar se a pessoa venceu ou não
+        if(venceu){
+            JOptionPane.showMessageDialog(this, "Parabéns você venceu");
+            LimparJogo();
+        }else{
+            JOptionPane.showMessageDialog(this, "Ops, você perdeu o jogo!");
+            LimparJogo();
+        }
+        
+    }//fim do FinalizarJogo
+    
+    
+    public void VerificarVitoria(){
+        //armazenar a quantidade de casas com bandeiras
+        int casasSemBomba= 100 - quantidadeBombas;
+        //se a pessoa abriu todas as bandeiras e não abriu nehuma bomba
+        // então ela venceu o jogo, e o finalizarJogo imprime a mensagem
+        if(quantidadeCasasAbertas == casasSemBomba){
+            FinalizarJogo(true);
+        }
+    }
+  
+    public void LimparJogo(){
+        quantidadeCasasAbertas=0;
+        jogoEncerrado=false;
+           
+        for (int coluna=0;coluna<=9;coluna++){
+            for(int linha=0;linha<=9;linha++){
+                bombas[linha][coluna]=false;
+                abertos[linha][coluna]=false;
+                
+                //limpeza dos botões
+                JButton botao = btnCampos[linha][coluna];
+                botao.setIcon(null);
+                
+            }//fim do 2°
+        }//fim do 1°
+        AdicionarBombas();
+        IniciarCronometro();
+        
+    }//fim do LimparJogo
+    
+     public void mostrarBombas(){
+        for(int coluna=0;coluna<=9;coluna++){
+            for(int linha=0;linha<=9;linha++){
+            JButton botao = btnCampos[linha][coluna];
+        //se no botão tiver uma bomba, então vamos mostrar a bomba a bomba a ele 
+        if(bombas[linha][coluna]){
+            //variavel que recebe nossa imagem
+        
+            ImageIcon imgBomba = new ImageIcon(getClass().getResource("/assets/blast.png"));
+            //colocar a imagem no botao
+            botao.setIcon(imgBomba);
+           
+        }//fim do if
+     }//fim do 2° for
+    }//fim do 1° for        
+}//fim do mostrarBombas
+    
+    public void IniciarCronometro(){
+        // zerar o cronometro caso tenha tido um jogo anterior
+        if(cronometro !=null){
+            cronometro.stop();        
+        }
+        // reseta o cronometro
+        segundosPassados = 0;
+        tfTempo.setText("00:00");
+        
+        // converter o tempo em minutos e segundos
+        // o cronometro conta de 1 em 1 segundos, e vai convertendo
+        cronometro = new Timer(1000, Evento->{
+            segundosPassados++;
+            int minutos = segundosPassados/60;
+            int horas = minutos/60;
+            int segundo = segundosPassados%60; 
+            //mostrar o tempo dentro da váriavel
+            tfTempo.setText(String.format("%02d:%02d:%02d",horas,minutos,segundo));
+               
+       });
+       cronometro.start();
+ }
+  
+    
+  
+    
+   
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
         buttonGroup1 = new javax.swing.ButtonGroup();
-        titulo = new javax.swing.JLabel();
         btnIniciar = new javax.swing.JButton();
         tfTempo = new javax.swing.JTextField();
         painelCampo = new javax.swing.JPanel();
+        titulo = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-
-        titulo.setFont(new java.awt.Font("Segoe UI", 1, 48)); // NOI18N
-        titulo.setForeground(new java.awt.Color(255, 0, 204));
-        titulo.setText("Campo Minado");
 
         btnIniciar.setBackground(new java.awt.Color(255, 51, 204));
         btnIniciar.setFont(new java.awt.Font("Segoe UI", 1, 24)); // NOI18N
@@ -191,12 +287,16 @@ public class Jogo extends javax.swing.JFrame {
         painelCampo.setLayout(painelCampoLayout);
         painelCampoLayout.setHorizontalGroup(
             painelCampoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 972, Short.MAX_VALUE)
+            .addGap(0, 820, Short.MAX_VALUE)
         );
         painelCampoLayout.setVerticalGroup(
             painelCampoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 563, Short.MAX_VALUE)
+            .addGap(0, 373, Short.MAX_VALUE)
         );
+
+        titulo.setFont(new java.awt.Font("Segoe UI", 1, 48)); // NOI18N
+        titulo.setForeground(new java.awt.Color(255, 0, 204));
+        titulo.setText("Campo Minado");
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -205,40 +305,44 @@ public class Jogo extends javax.swing.JFrame {
             .addGroup(layout.createSequentialGroup()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
-                        .addGap(39, 39, 39)
-                        .addComponent(titulo, javax.swing.GroupLayout.PREFERRED_SIZE, 358, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(216, 216, 216)
+                        .addGap(65, 65, 65)
+                        .addComponent(titulo)
+                        .addGap(202, 202, 202)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                             .addComponent(btnIniciar, javax.swing.GroupLayout.DEFAULT_SIZE, 188, Short.MAX_VALUE)
                             .addComponent(tfTempo)))
                     .addGroup(layout.createSequentialGroup()
-                        .addGap(15, 15, 15)
+                        .addGap(53, 53, 53)
                         .addComponent(painelCampo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(11, Short.MAX_VALUE))
+                .addContainerGap(125, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
-                        .addGap(43, 43, 43)
-                        .addComponent(titulo))
-                    .addGroup(layout.createSequentialGroup()
                         .addGap(30, 30, 30)
                         .addComponent(btnIniciar, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(18, 18, 18)
-                        .addComponent(tfTempo, javax.swing.GroupLayout.PREFERRED_SIZE, 55, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addGap(18, 18, 18)
+                        .addComponent(tfTempo, javax.swing.GroupLayout.PREFERRED_SIZE, 55, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(49, 49, 49)
+                        .addComponent(titulo)))
+                .addGap(82, 82, 82)
                 .addComponent(painelCampo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(23, Short.MAX_VALUE))
+                .addContainerGap(149, Short.MAX_VALUE))
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+    
+    
+    
     private void btnIniciarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnIniciarActionPerformed
         // TODO add your handling code here:
         IniciarJogo();
+      
     }//GEN-LAST:event_btnIniciarActionPerformed
 
     /**
@@ -261,9 +365,9 @@ public class Jogo extends javax.swing.JFrame {
             logger.log(java.util.logging.Level.SEVERE, null, ex);
         }
         //</editor-fold>
-
+ java.awt.EventQueue.invokeLater(() -> new Jogo().setVisible(true));
         /* Create and display the form */
-        java.awt.EventQueue.invokeLater(() -> new Jogo().setVisible(true));
+        
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
